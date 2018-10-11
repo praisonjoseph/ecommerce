@@ -1,3 +1,4 @@
+import math
 from django.db import models
 from carts.models import Cart
 from ecommerce.utils import unique_order_id_generator
@@ -16,7 +17,10 @@ class Order(models.Model):
     #billing_profile = 
     #shipping_address = 
     #billing_address
-    cart            = models.ForeignKey(Cart)
+    '''changed the cart to OnetoOnefield instead of foreign key
+    This is check if it breaks if multiple order takes the same cart id, will it 
+    break the checkout_home view?'''
+    cart            = models.OneToOneField(Cart)
     status          = models.CharField(max_length=120, default='created', choices = ORDER_STATUS_CHOICES)
     shipping_total  = models.DecimalField(default=5.99, max_digits=100, decimal_places=2)
     total           = models.DecimalField(default=0.00, max_digits=100, decimal_places=2)
@@ -27,10 +31,11 @@ class Order(models.Model):
     def update_total(self):
         cart_total = self.cart.total 
         shipping_total = self.shipping_total
-        new_total = cart_total + shipping_total
-        self.total = new_total
+        new_total = math.fsum([cart_total, shipping_total])
+        formatted_total = format(new_total, '.2f')
+        self.total = formatted_total
         self.save()
-        return new_total
+        #return new_total
 
 def pre_save_create_order_id(sender, instance, *args, **kwargs):
     if not instance.order_id:
