@@ -3,6 +3,7 @@ from django.db import models
 from carts.models import Cart
 from ecommerce.utils import unique_order_id_generator
 from django.db.models.signals import pre_save, post_save
+from billing.models import BillingProfile
 
 ORDER_STATUS_CHOICES = (
     ('created', 'Created'),
@@ -14,17 +15,17 @@ ORDER_STATUS_CHOICES = (
 # Create your models here.
 class Order(models.Model):
     order_id        = models.CharField(max_length=120, blank=True)
-    #billing_profile = 
+    billing_profile = models.ForeignKey(BillingProfile, null=True, blank=True)
     #shipping_address = 
     #billing_address
     '''changed the cart to OnetoOnefield instead of foreign key
     This is check if it breaks if multiple order takes the same cart id, will it 
-    break the checkout_home view?'''
-    cart            = models.OneToOneField(Cart)
+    break the checkout_home view? Changed it back to foreignkey'''
+    cart            = models.ForeignKey(Cart)
     status          = models.CharField(max_length=120, default='created', choices = ORDER_STATUS_CHOICES)
     shipping_total  = models.DecimalField(default=5.99, max_digits=100, decimal_places=2)
     total           = models.DecimalField(default=0.00, max_digits=100, decimal_places=2)
-
+    active          = models.BooleanField(default=True)
     def __str__(self):
         return self.order_id
 
